@@ -1,52 +1,22 @@
-# Godot 4.3 headless vehicle test
-extends SceneTree
+# Nairobi Drive
 
-func _init() -> void:
-    print("Starting Nairobi Drive headless smoke test...")
+Godot 4.3 driving prototype using procedural original geometry. Renderer: GL Compatibility.
 
-    var root := Node3D.new()
-    root.name = "Root"
-    var world := Node3D.new()
-    world.name = "World"
-    root.add_child(world)
+## Run
+Open this folder in Godot 4.3 and press **F5**. The project creates a 4.2 km procedural street grid, block buildings with collisions, a van, checkpoint route, minimap, HUD and three lighting presets at runtime. Controls: W/S or arrows drive, A/D steer, Space handbrake, Shift brake, C camera, V vehicle, T time of day, M minimap, R recover, Enter restart.
 
-    var floor := StaticBody3D.new()
-    var floor_shape := CollisionShape3D.new()
-    var box := BoxShape3D.new()
-    box.size = Vector3(200.0, 1.0, 200.0)
-    floor_shape.shape = box
-    floor.add_child(floor_shape)
-    floor.position = Vector3(0.0, -0.5, 0.0)
-    root.add_child(floor)
+## Source assets
+Uploaded source files are under `assets/source/`. Several large imported/source assets are tracked with Git LFS. The current playable scene builds a deterministic procedural city so it does not depend on importing large source models at startup. Run `git lfs pull` after cloning to download actual LFS assets.
 
-    var vehicle := VehicleDriver.new()
-    vehicle.configure("van", Color(0.7, 0.2, 0.2))
-    vehicle.position = Vector3(0.0, 1.0, 12.0)
-    vehicle.linear_velocity = Vector3(0.0, 0.0, 0.0)
-    root.add_child(vehicle)
+## Export
+Install Godot 4.3 export templates. In Project > Export, add Windows Desktop or Web presets; use GL Compatibility for Web. Export the project from the editor. For Windows, export an executable. For Web, export the HTML and `.pck` files and serve them from a static web server.
 
-    var steps := 0
-    var max_steps := 600
-    while steps < max_steps:
-        var throttle = 1.0
-        var steer = 0.2
-        for wheel in vehicle.front_wheels:
-            wheel.steering = steer
-            wheel.brake = 0.0
-        for wheel in vehicle.rear_wheels:
-            wheel.engine_force = -6200.0 * throttle
-            wheel.brake = 0.0
-        vehicle._physics_process(1.0 / 120.0)
-        vehicle.global_position += Vector3(0.0, 0.0, -0.2)
-        steps += 1
+## Physics smoke test
+The test uses the real VehicleBody3D physics engine and checks acceleration, steering input, braking, ground contact, wall collision and gross rollover. Run on Windows with Godot 4.3 installed:
 
-    var speed := vehicle.linear_velocity.length()
-    print("Vehicle test results: steps=%d speed=%.2f m/s" % [steps, speed])
-    if speed <= 0.0:
-        printerr("Vehicle smoke test failed: no acceleration.")
-        quit(1)
-        return
+```bat
+godot --headless --path . --rendering-method gl_compatibility --script tests/VehiclePhysicsTest.gd
+```
 
-    print("Smoke test passed.")
-    quit()
+On Linux, use the installed Godot 4.3 binary. For mesh-backed collision tests, use xvfb and OpenGL 3; this smoke test uses primitive collision shapes.
 
