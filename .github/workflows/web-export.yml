@@ -1,0 +1,43 @@
+name: Godot Web Export
+
+on:
+  push:
+    branches:
+      - build/procedural-nairobi-drive
+  pull_request:
+    branches:
+      - build/procedural-nairobi-drive
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-web:
+    name: Import and export Web build
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3.0
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Godot version
+        run: godot --version
+
+      - name: Import project resources
+        run: godot --headless --editor --path . --import
+
+      - name: Export Web build
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --verbose --export-release "Web" build/web/index.html
+
+      - name: Upload Web build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nairobi-drive-web
+          path: build/web/
+          if-no-files-found: ignore
+          retention-days: 14
