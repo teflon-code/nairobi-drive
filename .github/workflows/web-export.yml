@@ -21,24 +21,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Git LFS
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git-lfs
-          git lfs install
-
-      - name: Pull LFS assets
-        run: git lfs pull
-
       - name: Export Web build
         run: |
           mkdir -p build/web
           docker run --rm \
-            --entrypoint /bin/bash \
             -v "$GITHUB_WORKSPACE:/project" \
             -w /project \
             robpc/godot-headless:4.3-web \
-            -lc 'apt-get update && apt-get install -y --no-install-recommends libfontconfig1 && godot --headless --path /project --verbose --export-release "Web" /project/build/web/index.html'
+            --headless --path /project --export-release "Web" /project/build/web/index.html
 
       - name: Upload Web build artifact
         if: always()
