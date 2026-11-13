@@ -16,22 +16,32 @@ jobs:
   export-web:
     name: Import and export Web build
     runs-on: ubuntu-latest
-    container:
-      image: barichello/godot-ci:4.3.0
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Pull Godot 4.3 Web export image
+        run: docker pull robpc/godot-headless:4.3-web
+
       - name: Show Godot version
-        run: godot --version
+        run: docker run --rm robpc/godot-headless:4.3-web --version
 
       - name: Import project resources
-        run: godot --headless --editor --path . --import
+        run: >-
+          docker run --rm
+          -v "$GITHUB_WORKSPACE:/project"
+          -w /project
+          robpc/godot-headless:4.3-web
+          --headless --editor --path /project --import
 
       - name: Export Web build
         run: |
           mkdir -p build/web
-          godot --headless --path . --verbose --export-release "Web" build/web/index.html
+          docker run --rm
+            -v "$GITHUB_WORKSPACE:/project"
+            -w /project
+            robpc/godot-headless:4.3-web
+            --headless --path /project --verbose --export-release "Web" /project/build/web/index.html
 
       - name: Upload Web build artifact
         if: always()
